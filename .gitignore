@@ -1,0 +1,8 @@
+.clj-kondo
+.nrepl-port
+target
+.lein-repl-history
+.lein-failures
+.calva
+.DS_Store
+.lsp
