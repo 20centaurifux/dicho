@@ -1,6 +1,7 @@
 (ns dicho.bridges.failjure
   "Bridge to integrate dicho with failjure library."
-  (:require [failjure.core :as f])
+  (:require [failjure.core :as f]
+            [dicho.types])
   (:import [dicho.types OkResponse ErrorResponse]))
 
 (extend-type OkResponse
