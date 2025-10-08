@@ -102,3 +102,52 @@
   (testing "error responses with :ok status should not conform to spec"
     (is (invalid-error? :ok "Error")) ; status cannot be :ok
     (is (invalid-error? :not-found "Error" {:status :ok})))) ; changed status to :ok
+
+(deftest response-spec-test
+  (testing "valid responses - ok type"
+    (is (s/valid? ::specs/response (->OkResponse :ok "success")))
+    (is (s/valid? ::specs/response (->OkResponse :ok {:data 42})))
+    (is (s/valid? ::specs/response (->OkResponse :ok nil)))
+    (is (s/valid? ::specs/response (merge (->OkResponse :ok "test")
+                                          {:trace-id "abc123"
+                                           :timestamp #inst "2024-01-01"}))))
+
+  (testing "valid responses - error type"
+    (is (s/valid? ::specs/response (->ErrorResponse :not-found "Not found")))
+    (is (s/valid? ::specs/response (->ErrorResponse :invalid-params "Bad input")))
+    (is (s/valid? ::specs/response (merge (->ErrorResponse :internal "Server error")
+                                          {:detail "Database connection failed"
+                                           :retry? true
+                                           :cause "Connection timeout"
+                                           :fields {:connection "timeout"}
+                                           :trace-id "xyz789"
+                                           :timestamp #inst "2024-01-02"}))))
+
+  (testing "invalid responses"
+    (is (not (s/valid? ::specs/response nil)))
+    (is (not (s/valid? ::specs/response {})))
+    (is (not (s/valid? ::specs/response {:status :ok}))) ; missing OkResponse record type
+    (is (not (s/valid? ::specs/response {:status :not-found :title "Error"}))) ; missing ErrorResponse record type
+    (is (not (s/valid? ::specs/response "not a response")))
+    (is (not (s/valid? ::specs/response 42))))
+
+  (testing "responses with invalid metadata"
+    (is (not (s/valid? ::specs/response (merge (->OkResponse :ok "test")
+                                               {:trace-id 123})))) ; trace-id must be string
+    (is (not (s/valid? ::specs/response (merge (->ErrorResponse :internal "Error")
+                                               {:timestamp "invalid"})))) ; timestamp must be inst
+    (is (not (s/valid? ::specs/response (merge (->ErrorResponse :not-found "Error")
+                                               {:retry? "true"})))) ; retry? must be boolean
+    (is (not (s/valid? ::specs/response (merge (->ErrorResponse :conflict "Error")
+                                               {:detail ""})))) ; detail must not be empty
+    (is (not (s/valid? ::specs/response (merge (->ErrorResponse :internal "Error")
+                                               {:fields "not-a-map"}))))) ; fields must be map
+
+  (testing "conform returns tagged values"
+    (let [ok-response (->OkResponse :ok "success")
+          error-response (->ErrorResponse :not-found "Not found")]
+      (is (= [:ok ok-response] (s/conform ::specs/response ok-response)))
+      (is (= [:error error-response] (s/conform ::specs/response error-response))))
+
+    (let [invalid-response {:not "a response"}]
+      (is (= ::s/invalid (s/conform ::specs/response invalid-response))))))

@@ -47,3 +47,8 @@
                  :opt-un [:dicho.specs.ok/result
                           ::trace-id
                           ::timestamp])))
+
+;;; response
+
+(s/def ::response (s/or :ok ::ok
+                        :error ::error))
