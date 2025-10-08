@@ -1,6 +1,6 @@
-# Dicho
+# dicho
 
-Dicho is a Clojure library for creating standardized success and error responses. It provides a structured way to handle responses in your application, ensuring consistency and type safety. The library also integrates with other tools like `failjure` for seamless error handling.
+dicho is a Clojure library for creating standardized success and error responses. It provides a structured way to handle responses in your application, ensuring consistency and type safety. The library also integrates with other tools like `failjure` for seamless error handling.
 
 ## Features
 
@@ -85,7 +85,7 @@ Add the following dependency to your `project.clj`:
 
 ### Integration with Failjure
 
-Dicho integrates with the `failjure` library for error handling. `OkResponse` and `ErrorResponse` implement the `HasFailed` protocol.
+dicho integrates with the `failjure` library for error handling. `OkResponse` and `ErrorResponse` implement the `HasFailed` protocol.
 
 ```clojure
 (require '[failjure.core :as f]
@@ -103,7 +103,7 @@ Dicho integrates with the `failjure` library for error handling. `OkResponse` an
 
 ## Specs
 
-Dicho uses `clojure.spec` to validate responses. The specs ensure that responses conform to the expected structure.
+dicho uses `clojure.spec` to validate responses. The specs ensure that responses conform to the expected structure.
 
 ### Success Response Spec
 
