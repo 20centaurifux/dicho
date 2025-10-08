@@ -128,3 +128,62 @@ Dicho uses `clojure.spec` to validate responses. The specs ensure that responses
 (s/valid? ::specs/error (err :not-found "Not found"))
 ;; => true
 ```
+
+## Conversion Utilities
+
+The `dicho.convert` namespace provides utilities for converting between dicho response records and other data structures like maps and exceptions. This is particularly useful for serialization, deserialization, and interoperability with other systems.
+
+### Converting Responses to Maps
+
+Use `response->map` to convert any dicho response to a plain map:
+
+```clojure
+(require '[dicho.convert :as convert]
+         '[dicho.core :refer [ok err]])
+
+;; Convert success response
+(def success-response (ok {:data 42} {:trace-id "abc123"}))
+(convert/response->map success-response)
+;; => {:status :ok, :result {:data 42}, :trace-id "abc123"}
+
+;; Convert error response
+(def error-response (err :not-found "Resource not found" {:detail "User ID 123 not found"}))
+(convert/response->map error-response)
+;; => {:status :not-found, :title "Resource not found", :detail "User ID 123 not found"}
+```
+
+### Converting Maps to Responses
+
+Use `map->response` to reconstruct dicho responses from maps. The function validates the resulting response against dicho specs:
+
+```clojure
+;; Convert map to success response
+(def success-map {:status :ok :result "Success data"})
+(convert/map->response success-map)
+;; => #dicho.types.OkResponse{:status :ok, :result "Success data"}
+
+;; Convert map to error response
+(def error-map {:status :invalid-params :title "Validation failed"})
+(convert/map->response error-map)
+;; => #dicho.types.ErrorResponse{:status :invalid-params, :title "Validation failed"}
+
+;; Invalid maps throw exceptions
+(convert/map->response {:status :not-found}) ; Throws ExceptionInfo - missing title
+```
+
+### Exception Conversion
+
+Convert between error responses and `ExceptionInfo` objects for seamless integration with Clojure's exception handling:
+
+```clojure
+;; Convert error response to exception
+(def error-response (err :timeout "Request timeout" {:retry? true}))
+(def exception (convert/response->ex-info error-response))
+
+(.getMessage exception) ;; => "Request timeout"
+(ex-data exception) ;; => {:status :timeout, :retry? true}
+
+;; Convert exception back to error response
+(convert/ex-info->response exception)
+;; => #dicho.types.ErrorResponse{:status :timeout, :title "Request timeout", :retry? true}
+```
