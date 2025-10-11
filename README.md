@@ -71,6 +71,82 @@ Add the following dependency to your `project.clj`:
 (ok? (err :not-found "Not found")) ;; => false
 ```
 
+### Pattern Matching on Responses
+
+dicho provides powerful pattern matching macros for handling responses conditionally.
+
+#### `when-ok` - Execute code only on success
+
+Execute code only when the response is successful, binding the result value:
+
+```clojure
+(require '[dicho.core :refer [when-ok]])
+
+(when-ok [data (ok {:users ["Alice" "Bob"]})]
+  (count (:users data)))
+;; => 2
+
+(when-ok [data (err :not-found "No users")]
+  (count (:users data)))
+;; => nil (body not executed)
+```
+
+#### `when-failed` - Execute code only on errors
+
+Execute code only when the response is an error, binding the error response:
+
+```clojure
+(require '[dicho.core :refer [when-failed]])
+
+(when-failed [error (err :timeout "Request timeout" {:retry? true})]
+  (if (:retry? error)
+    "Will retry"
+    "Giving up"))
+;; => "Will retry"
+
+(when-failed [error (ok "success")]
+  "This won't execute")
+;; => nil (body not executed)
+```
+
+#### `either` - Handle both success and error cases
+
+Pattern match with separate handlers for success and error cases:
+
+```clojure
+(require '[dicho.core :refer [either]])
+
+(either (ok 42)
+  [result] (* result 2)                   ; success handler
+  [error] (str "Error: " (:title error))) ; error handler
+;; => 84
+
+(either (err :invalid-params "Bad input")
+  [result] (* result 2)
+  [error] (str "Error: " (:title error)))
+;; => "Error: Bad input"
+```
+
+#### `match-status` - Case-like matching on status
+
+Match on specific response statuses with compile-time optimization:
+
+```clojure
+(require '[dicho.core :refer [match-status]])
+
+(defn handle-api-response [response]
+  (match-status response
+    :ok "Operation successful"
+    :not-found "Resource not found"
+    :timeout "Request timed out" 
+    :rate-limited "Too many requests"
+    "Unknown error"))
+
+(handle-api-response (ok "data")) ;; => "Operation successful"
+(handle-api-response (err :timeout "Slow")) ;; => "Request timed out"
+(handle-api-response (err :custom-error "Unknown")) ;; => "Unknown error"
+```
+
 ### Unwrapping Responses
 
 ```clojure
