@@ -94,3 +94,78 @@
   (result [this]
     (throw (ex-info (:title this)
                     (dissoc this :title)))))
+
+;; Pattern matching
+
+(defmacro when-ok
+  "Execute body with result bound to symbol when response is ok, otherwise nil.
+  Similar to when-let but for dicho ok responses.
+  
+  Examples:
+   ```
+   (when-ok [result (ok 42)]
+     (* result 2))
+   ```"
+  [[binding response] & body]
+  `(let [response# ~response]
+     (assert (s/valid? ::specs/response response#)
+             "Response does not conform ok nor error spec.")
+     (when (= :ok (:status response#))
+       (let [~binding (:result response#)]
+         ~@body))))
+
+(defmacro when-failed
+  "Execute body with error response bound to symbol when response is failed, otherwise nil.
+  Similar to when-let but for dicho error responses.
+  
+  Examples:
+   ```
+   (when-failed [error (err :not-found \"Document not found\")]
+     (str \"Failed: \" (:title error)))
+   ```"
+  [[binding response] & body]
+  `(let [response# ~response]
+     (assert (s/valid? ::specs/response response#)
+             "Response does not conform ok nor error spec.")
+     (when (not= :ok (:status response#))
+       (let [~binding response#]
+         ~@body))))
+
+(defmacro either
+  "Pattern match on response with handlers for success and error cases.
+  
+  Examples:
+   ```
+   (either (ok 42)
+     [result] (* result 2)
+     [error] (str \"Failed: \" (:title error)))
+   ```"
+  [response ok-binding ok-body error-binding error-body]
+  (let [response-sym (gensym "response")]
+    `(let [~response-sym ~response]
+       (assert (s/valid? ::specs/response ~response-sym)
+               "Response does not conform ok nor error spec.")
+       (if (= :ok (:status ~response-sym))
+         (let [~@ok-binding (:result ~response-sym)]
+           ~ok-body)
+         (let [~@error-binding ~response-sym]
+           ~error-body)))))
+
+(defmacro match-status
+  "Case-like matching on response status with compile-time optimization.
+  
+  Examples:
+   ```
+   (match-status some-response
+     :ok \"Success!\"
+     :not-found \"Missing resource\"
+     :timeout \"Request timed out\"
+     \"Unknown error\")
+   ```"
+  [response & cases]
+  (let [response-sym (gensym "response")]
+    `(let [~response-sym ~response]
+       (assert (s/valid? ::specs/response ~response-sym)
+               "Response does not conform ok nor error spec.")
+       (case (:status ~response-sym)
+         ~@cases))))
