@@ -23,7 +23,7 @@ dicho is a Clojure library for creating standardized success and error responses
 Add the following dependency to your `project.clj`:
 
 ```clojure
-[dicho "0.1.0-SNAPSHOT"]
+[de.dixieflatline/dicho "0.1.0-SNAPSHOT"]
 ```
 
 ## Usage
