@@ -30,7 +30,7 @@
 (defn response->ex-info
   "Converts an ErrorResponse to an ex-info exception."
   [error-response]
-  {:pre [#(s/valid? ::specs/error %)]}
+  {:pre [(s/valid? ::specs/error error-response)]}
   (ex-info (:title error-response)
            (dissoc error-response :title)))
 
