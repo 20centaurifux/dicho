@@ -43,9 +43,9 @@
 
 (s/def ::ok
   (s/and (partial instance? OkResponse)
-         (s/keys :req-un [:dicho.specs.ok/status]
-                 :opt-un [:dicho.specs.ok/result
-                          ::trace-id
+         (s/keys :req-un [:dicho.specs.ok/status
+                          :dicho.specs.ok/result]
+                 :opt-un [::trace-id
                           ::timestamp])))
 
 ;;; response
