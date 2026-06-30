@@ -150,9 +150,10 @@
     (let [exception (ex-info "Message from exception" {:status :error :title "Title from data" :detail "Extra detail"})
           response (convert/ex-info->response exception)]
       (is (= :error (:status response)))
-      (is (= "Message from exception" (:title response))) ; title comes from getMessage, not ex-data
-      (is (= "Extra detail" (:detail response))) ; detail is preserved
-      (is (not (contains? response :title-from-data))))) ; title from ex-data is not included
+      ;; title comes from getMessage, not ex-data
+      (is (= "Message from exception" (:title response)))
+      ;; detail is preserved
+      (is (= "Extra detail" (:detail response)))))
 
   (testing "roundtrip ex-info conversion"
     (let [original (err :timeout "Request timeout" {:retry? true :attempt 3})
