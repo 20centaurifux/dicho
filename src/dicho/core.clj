@@ -83,17 +83,6 @@
    
   Throws ExceptionInfo if inputs are invalid or result doesn't conform to `:dicho.specs/error`."
   ([status msg]
-   (when (= :ok status)
-     (throw (ex-info "Status cannot be :ok for error responses"
-                     {:status status})))
-   (when-not (keyword? status)
-     (throw (ex-info "Status must be a keyword"
-                     {:status status
-                      :type (type status)})))
-   (when-not (and (string? msg) (seq msg))
-     (throw (ex-info "Message must be a non-empty string"
-                     {:msg msg
-                      :type (type msg)})))
    (let [result (->ErrorResponse status msg)]
      (when-not (s/valid? ::specs/error result)
        (throw (ex-info "Result does not conform to ::specs/error"
