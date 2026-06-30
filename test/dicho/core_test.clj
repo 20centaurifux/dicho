@@ -3,6 +3,21 @@
             [dicho.core :refer [ok err ok? error? result when-ok when-failed either match-status]]
             [dicho.types :refer [->OkResponse ->ErrorResponse]]))
 
+;;; Test helpers
+
+(defn assert-invalid-response-exception
+  "Helper to test that a function throws ex-info with correct message and ex-data."
+  [f invalid-response]
+  (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                        #"Response does not conform ok nor error spec"
+                        (f)))
+  (try
+    (f)
+    (catch clojure.lang.ExceptionInfo e
+      (is (= invalid-response (:response (ex-data e)))))))
+
+;;; Tests
+
 (deftest ok-test
   (testing "ok function with single argument"
     (let [result (ok "success")]
@@ -210,31 +225,16 @@
 
   (testing "when-ok throws ex-info for invalid responses"
     (let [invalid-response {:invalid "response"}]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (when-ok [value invalid-response]
-                              value)))
-      (try
-        (when-ok [value invalid-response] value)
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-response (:response (ex-data e)))))))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Response does not conform ok nor error spec"
-                          (when-ok [value nil]
-                            value)))
-    (try
-      (when-ok [value nil] value)
-      (catch clojure.lang.ExceptionInfo e
-        (is (= nil (:response (ex-data e))))))
+      (assert-invalid-response-exception
+       #(when-ok [value invalid-response] value)
+       invalid-response))
+    (assert-invalid-response-exception
+     #(when-ok [value nil] value)
+     nil)
     (let [invalid-str "not a response"]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (when-ok [value invalid-str]
-                              value)))
-      (try
-        (when-ok [value invalid-str] value)
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-str (:response (ex-data e))))))))
+      (assert-invalid-response-exception
+       #(when-ok [value invalid-str] value)
+       invalid-str)))
 
   (testing "when-ok with responses containing metadata"
     (let [response-with-meta (ok "data" {:trace-id "abc123" :timestamp #inst "2024-01-01"})
@@ -306,31 +306,16 @@
 
   (testing "when-failed throws ex-info for invalid responses"
     (let [invalid-response {:invalid "response"}]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (when-failed [error invalid-response]
-                              (:title error))))
-      (try
-        (when-failed [error invalid-response] (:title error))
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-response (:response (ex-data e)))))))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Response does not conform ok nor error spec"
-                          (when-failed [error nil]
-                            (:title error))))
-    (try
-      (when-failed [error nil] (:title error))
-      (catch clojure.lang.ExceptionInfo e
-        (is (= nil (:response (ex-data e))))))
+      (assert-invalid-response-exception
+       #(when-failed [error invalid-response] (:title error))
+       invalid-response))
+    (assert-invalid-response-exception
+     #(when-failed [error nil] (:title error))
+     nil)
     (let [invalid-str "not a response"]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (when-failed [error invalid-str]
-                              (:title error))))
-      (try
-        (when-failed [error invalid-str] (:title error))
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-str (:response (ex-data e))))))))
+      (assert-invalid-response-exception
+       #(when-failed [error invalid-str] (:title error))
+       invalid-str)))
 
   (testing "when-failed binding works with complete error response"
     (let [complex-error (err :validation-failed "Multiple validation errors"
@@ -442,40 +427,22 @@
 
   (testing "either throws ex-info for invalid responses"
     (let [invalid-response {:invalid "response"}]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (either invalid-response
-                              [value] value
-                              [error] (:title error))))
-      (try
-        (either invalid-response
+      (assert-invalid-response-exception
+       #(either invalid-response
           [value] value
           [error] (:title error))
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-response (:response (ex-data e)))))))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Response does not conform ok nor error spec"
-                          (either nil
-                            [value] value
-                            [error] (:title error))))
-    (try
-      (either nil
+       invalid-response))
+    (assert-invalid-response-exception
+     #(either nil
         [value] value
         [error] (:title error))
-      (catch clojure.lang.ExceptionInfo e
-        (is (= nil (:response (ex-data e))))))
+     nil)
     (let [invalid-str "not a response"]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (either invalid-str
-                              [value] value
-                              [error] (:title error))))
-      (try
-        (either invalid-str
+      (assert-invalid-response-exception
+       #(either invalid-str
           [value] value
           [error] (:title error))
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-str (:response (ex-data e))))))))
+       invalid-str)))
 
   (testing "either works with responses containing metadata"
     (let [success-with-meta (ok "data" {:trace-id "abc123" :timestamp #inst "2024-01-01"})
@@ -588,40 +555,22 @@
 
   (testing "match-status throws ex-info for invalid responses"
     (let [invalid-response {:invalid "response"}]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (match-status invalid-response
-                              :ok "success"
-                              "default")))
-      (try
-        (match-status invalid-response
+      (assert-invalid-response-exception
+       #(match-status invalid-response
           :ok "success"
           "default")
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-response (:response (ex-data e)))))))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Response does not conform ok nor error spec"
-                          (match-status nil
-                            :ok "success"
-                            "default")))
-    (try
-      (match-status nil
+       invalid-response))
+    (assert-invalid-response-exception
+     #(match-status nil
         :ok "success"
         "default")
-      (catch clojure.lang.ExceptionInfo e
-        (is (= nil (:response (ex-data e))))))
+     nil)
     (let [invalid-str "not a response"]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Response does not conform ok nor error spec"
-                            (match-status invalid-str
-                              :ok "success"
-                              "default")))
-      (try
-        (match-status invalid-str
+      (assert-invalid-response-exception
+       #(match-status invalid-str
           :ok "success"
           "default")
-        (catch clojure.lang.ExceptionInfo e
-          (is (= invalid-str (:response (ex-data e))))))))
+       invalid-str)))
 
   (testing "match-status works with responses containing metadata"
     (let [success-with-meta (ok "data" {:trace-id "abc123" :timestamp #inst "2024-01-01"})
