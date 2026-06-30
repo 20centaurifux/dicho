@@ -82,7 +82,11 @@
 ;; Protocol for unwrapping response values
 
 (defprotocol Result
-  "Protocol for unwrapping response values."
+  "Protocol for unwrapping response values.
+  
+  For OkResponse: Returns the :result value.
+  For ErrorResponse: Throws ex-info with :title as message and all fields
+                     except :title in ex-data (to avoid duplication)."
   (result [this] "Unwraps the response value or throws an exception."))
 
 (extend-type OkResponse

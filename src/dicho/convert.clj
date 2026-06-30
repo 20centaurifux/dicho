@@ -28,14 +28,26 @@
     response))
 
 (defn response->ex-info
-  "Converts an ErrorResponse to an ex-info exception."
+  "Converts an ErrorResponse to an ex-info exception.
+  
+  The :title field becomes the exception message, and all other fields
+  (including :status, :detail, :retry?, etc.) are preserved in ex-data.
+  The :title is removed from ex-data to avoid duplication since it's
+  accessible via (.getMessage ex)."
   [error-response]
   {:pre [(s/valid? ::specs/error error-response)]}
   (ex-info (:title error-response)
            (dissoc error-response :title)))
 
 (defn ex-info->response
-  "Converts an ExceptionInfo exception to an ErrorResponse."
+  "Converts an ExceptionInfo exception to an ErrorResponse.
+  
+  The exception message becomes the :title field, and :status must be present
+  in ex-data. Any :title in ex-data is ignored in favor of the exception message.
+  All other fields from ex-data are preserved as additional error metadata.
+  
+  Throws AssertionError if ex-data does not contain :status or if the resulting
+  ErrorResponse does not conform to ::specs/error."
   [ex]
   {:pre [(instance? clojure.lang.ExceptionInfo ex)]
    :post [(s/valid? ::specs/error %)]}
