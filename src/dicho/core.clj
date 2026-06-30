@@ -108,8 +108,9 @@
    ```"
   [[binding response] & body]
   `(let [response# ~response]
-     (assert (s/valid? ::specs/response response#)
-             "Response does not conform ok nor error spec.")
+     (when-not (s/valid? ::specs/response response#)
+       (throw (ex-info "Response does not conform ok nor error spec."
+                       {:response response#})))
      (when (= :ok (:status response#))
        (let [~binding (:result response#)]
          ~@body))))
@@ -125,8 +126,9 @@
    ```"
   [[binding response] & body]
   `(let [response# ~response]
-     (assert (s/valid? ::specs/response response#)
-             "Response does not conform ok nor error spec.")
+     (when-not (s/valid? ::specs/response response#)
+       (throw (ex-info "Response does not conform ok nor error spec."
+                       {:response response#})))
      (when (not= :ok (:status response#))
        (let [~binding response#]
          ~@body))))
@@ -143,8 +145,9 @@
   [response ok-binding ok-body error-binding error-body]
   (let [response-sym (gensym "response")]
     `(let [~response-sym ~response]
-       (assert (s/valid? ::specs/response ~response-sym)
-               "Response does not conform ok nor error spec.")
+       (when-not (s/valid? ::specs/response ~response-sym)
+         (throw (ex-info "Response does not conform ok nor error spec."
+                         {:response ~response-sym})))
        (if (= :ok (:status ~response-sym))
          (let [~@ok-binding (:result ~response-sym)]
            ~ok-body)
@@ -165,7 +168,8 @@
   [response & cases]
   (let [response-sym (gensym "response")]
     `(let [~response-sym ~response]
-       (assert (s/valid? ::specs/response ~response-sym)
-               "Response does not conform ok nor error spec.")
+       (when-not (s/valid? ::specs/response ~response-sym)
+         (throw (ex-info "Response does not conform ok nor error spec."
+                         {:response ~response-sym})))
        (case (:status ~response-sym)
          ~@cases))))
