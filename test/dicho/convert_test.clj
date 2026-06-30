@@ -12,9 +12,9 @@
       (is (map? result))))
 
   (testing "invalid response throws exception"
-    (is (thrown? AssertionError (convert/response->map nil)))
-    (is (thrown? AssertionError (convert/response->map {})))
-    (is (thrown? AssertionError (convert/response->map "not-a-response"))))
+    (is (thrown? clojure.lang.ExceptionInfo (convert/response->map nil)))
+    (is (thrown? clojure.lang.ExceptionInfo (convert/response->map {})))
+    (is (thrown? clojure.lang.ExceptionInfo (convert/response->map "not-a-response"))))
 
   (testing "ok response with metadata conversion"
     (let [response (ok {:data 42} {:trace-id "abc123" :timestamp #inst "2024-01-01"})
@@ -76,15 +76,15 @@
 
   (testing "invalid input throws exceptions"
     (testing "non-map input"
-      (is (thrown? AssertionError (convert/map->response nil)))
-      (is (thrown? AssertionError (convert/map->response "not-a-map")))
-      (is (thrown? AssertionError (convert/map->response 42)))
-      (is (thrown? AssertionError (convert/map->response []))))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response nil)))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response "not-a-map")))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response 42)))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response []))))
 
     (testing "map without :status key"
-      (is (thrown? AssertionError (convert/map->response {})))
-      (is (thrown? AssertionError (convert/map->response {:result "success"})))
-      (is (thrown? AssertionError (convert/map->response {:title "Error"}))))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response {})))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response {:result "success"})))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/map->response {:title "Error"}))))
 
     (testing "map with invalid spec conformance"
       (testing "error response without required title"
@@ -138,7 +138,7 @@
 
   (testing "ex-info without status throws exception"
     (let [exception (ex-info "Generic error" {:some-field "value"})]
-      (is (thrown? AssertionError (convert/ex-info->response exception)))))
+      (is (thrown? clojure.lang.ExceptionInfo (convert/ex-info->response exception)))))
 
   (testing "ex-info with status in ex-data"
     (let [exception (ex-info "Custom error" {:status :custom-error})

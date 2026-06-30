@@ -146,36 +146,36 @@
                             (result response))))))
 
 (deftest validation-test
-  (testing "ok function with invalid extra parameter should throw AssertionError"
-    (is (thrown? AssertionError (ok "data" "not-a-map")))
-    (is (thrown? AssertionError (ok "data" 123)))
-    (is (thrown? AssertionError (ok "data" []))))
+  (testing "ok function with invalid extra parameter should throw ExceptionInfo"
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" "not-a-map")))
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" 123)))
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" []))))
 
-  (testing "ok function with invalid metadata should throw AssertionError"
-    (is (thrown? AssertionError (ok "data" {:trace-id 123}))) ; trace-id must be string
-    (is (thrown? AssertionError (ok "data" {:trace-id ""}))) ; trace-id must not be empty
-    (is (thrown? AssertionError (ok "data" {:timestamp "not-an-instant"}))) ; timestamp must be inst
-    (is (thrown? AssertionError (ok "data" {:timestamp 1234567890})))) ; timestamp must be inst
+  (testing "ok function with invalid metadata should throw ExceptionInfo"
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" {:trace-id 123}))) ; trace-id must be string
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" {:trace-id ""}))) ; trace-id must not be empty
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" {:timestamp "not-an-instant"}))) ; timestamp must be inst
+    (is (thrown? clojure.lang.ExceptionInfo (ok "data" {:timestamp 1234567890})))) ; timestamp must be inst
 
-  (testing "err function with invalid parameters should throw AssertionError"
-    (is (thrown? AssertionError (err :ok "Error"))) ; status cannot be :ok
-    (is (thrown? AssertionError (err "not-keyword" "Error"))) ; status must be keyword
-    (is (thrown? AssertionError (err :not-found 123))) ; msg must be string
-    (is (thrown? AssertionError (err :not-found ""))) ; msg must not be empty
-    (is (thrown? AssertionError (err :not-found "Error" "not-map"))) ; extra must be map
-    (is (thrown? AssertionError (err :not-found "Error" 123)))) ; extra must be map
+  (testing "err function with invalid parameters should throw ExceptionInfo"
+    (is (thrown? clojure.lang.ExceptionInfo (err :ok "Error"))) ; status cannot be :ok
+    (is (thrown? clojure.lang.ExceptionInfo (err "not-keyword" "Error"))) ; status must be keyword
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found 123))) ; msg must be string
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found ""))) ; msg must not be empty
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" "not-map"))) ; extra must be map
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" 123)))) ; extra must be map
 
-  (testing "err function with invalid metadata should throw AssertionError"
-    (is (thrown? AssertionError (err :not-found "Error" {:detail ""}))) ; detail must not be empty  
-    (is (thrown? AssertionError (err :not-found "Error" {:detail 123}))) ; detail must be string
-    (is (thrown? AssertionError (err :not-found "Error" {:retry? "true"}))) ; retry? must be boolean
-    (is (thrown? AssertionError (err :not-found "Error" {:cause ""}))) ; cause must not be empty
-    (is (thrown? AssertionError (err :not-found "Error" {:cause 456}))) ; cause must be string
-    (is (thrown? AssertionError (err :not-found "Error" {:fields "invalid"}))) ; fields must be map
-    (is (thrown? AssertionError (err :not-found "Error" {:trace-id 789}))) ; trace-id must be string
-    (is (thrown? AssertionError (err :not-found "Error" {:trace-id ""}))) ; trace-id must not be empty
-    (is (thrown? AssertionError (err :not-found "Error" {:timestamp "invalid"}))) ; timestamp must be inst
-    (is (thrown? AssertionError (err :not-found "Error" {:timestamp 1234567890})))))
+  (testing "err function with invalid metadata should throw ExceptionInfo"
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:detail ""}))) ; detail must not be empty  
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:detail 123}))) ; detail must be string
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:retry? "true"}))) ; retry? must be boolean
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:cause ""}))) ; cause must not be empty
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:cause 456}))) ; cause must be string
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:fields "invalid"}))) ; fields must be map
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:trace-id 789}))) ; trace-id must be string
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:trace-id ""}))) ; trace-id must not be empty
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:timestamp "invalid"}))) ; timestamp must be inst
+    (is (thrown? clojure.lang.ExceptionInfo (err :not-found "Error" {:timestamp 1234567890})))))
 
 (deftest when-ok-test
   (testing "when-ok executes body on successful response"

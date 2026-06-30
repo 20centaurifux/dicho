@@ -49,14 +49,25 @@
     ;; => #dicho.types.OkResponse{:status :ok, :result \"data\", :trace-id \"abc123\"}
    ```
   
-  Throws AssertionError if extra is not a map and result doesn't conform to `:dicho.specs/ok`."
+  Throws ExceptionInfo if extra is not a map or result doesn't conform to `:dicho.specs/ok`."
   ([v]
-   {:post [(s/valid? ::specs/ok %)]}
-   (->OkResponse :ok v))
+   (let [result (->OkResponse :ok v)]
+     (when-not (s/valid? ::specs/ok result)
+       (throw (ex-info "Result does not conform to ::specs/ok"
+                       {:result result
+                        :explain (s/explain-data ::specs/ok result)})))
+     result))
   ([v extra]
-   {:pre [(map? extra)]
-    :post [(s/valid? ::specs/ok %)]}
-   (merge (->OkResponse :ok v) extra)))
+   (when-not (map? extra)
+     (throw (ex-info "Extra must be a map"
+                     {:extra extra
+                      :type (type extra)})))
+   (let [result (merge (->OkResponse :ok v) extra)]
+     (when-not (s/valid? ::specs/ok result)
+       (throw (ex-info "Result does not conform to ::specs/ok"
+                       {:result result
+                        :explain (s/explain-data ::specs/ok result)})))
+     result)))
 
 (defn err
   "Creates an `ErrorResponse` record.
@@ -70,14 +81,36 @@
     ;; => #dicho.types.ErrorResponse{:status :rate-limited, :title \"Too many requests\", :retry? true, :cause \"Quota exceeded\"}
    ```
    
-  Throws AssertionError if `extra` is not a map or result doesn't conform to `:dicho.specs/error`."
+  Throws ExceptionInfo if inputs are invalid or result doesn't conform to `:dicho.specs/error`."
   ([status msg]
-   {:post [(s/valid? ::specs/error %)]}
-   (->ErrorResponse status msg))
+   (when (= :ok status)
+     (throw (ex-info "Status cannot be :ok for error responses"
+                     {:status status})))
+   (when-not (keyword? status)
+     (throw (ex-info "Status must be a keyword"
+                     {:status status
+                      :type (type status)})))
+   (when-not (and (string? msg) (seq msg))
+     (throw (ex-info "Message must be a non-empty string"
+                     {:msg msg
+                      :type (type msg)})))
+   (let [result (->ErrorResponse status msg)]
+     (when-not (s/valid? ::specs/error result)
+       (throw (ex-info "Result does not conform to ::specs/error"
+                       {:result result
+                        :explain (s/explain-data ::specs/error result)})))
+     result))
   ([status msg extra]
-   {:pre [(map? extra)]
-    :post [(s/valid? ::specs/error %)]}
-   (merge (->ErrorResponse status msg) extra)))
+   (when-not (map? extra)
+     (throw (ex-info "Extra must be a map"
+                     {:extra extra
+                      :type (type extra)})))
+   (let [result (merge (err status msg) extra)]
+     (when-not (s/valid? ::specs/error result)
+       (throw (ex-info "Result does not conform to ::specs/error"
+                       {:result result
+                        :explain (s/explain-data ::specs/error result)})))
+     result)))
 
 ;; Protocol for unwrapping response values
 
