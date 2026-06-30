@@ -40,7 +40,7 @@
   {:pre [(instance? clojure.lang.ExceptionInfo ex)]
    :post [(s/valid? ::specs/error %)]}
   (let [data (ex-data ex)
-        status (:status data)
+        status (:status data) ; no nil check needed - ->ErrorResponse handles nil implicitly
         title (.getMessage ex)
         extra-data (dissoc data :status :title)]
     (if (empty? extra-data)
