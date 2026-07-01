@@ -46,9 +46,9 @@
   
   Throws ExceptionInfo if error-response does not conform to :dicho.specs/error."
   [error-response]
-  (as-> error-response er
-    (validate! er ::specs/error)
-    (ex-info (:title er) (dissoc er :title))))
+  (as-> error-response err
+    (validate! err ::specs/error)
+    (ex-info (:title err) (dissoc err :title))))
 
 (defn ex-info->response
   "Converts an ExceptionInfo exception to an ErrorResponse.
