@@ -90,24 +90,24 @@
       (testing "error response without required title"
         (is (thrown-with-msg?
              clojure.lang.ExceptionInfo
-             #"Response does not conform ok nor error spec\."
+             #"Invalid value for spec"
              (convert/map->response {:status :not-found}))))
 
       (testing "error response with empty title"
         (is (thrown-with-msg?
              clojure.lang.ExceptionInfo
-             #"Response does not conform ok nor error spec\."
+             #"Invalid value for spec"
              (convert/map->response {:status :invalid-params :title ""}))))
 
       (testing "response with invalid metadata"
         (is (thrown-with-msg?
              clojure.lang.ExceptionInfo
-             #"Response does not conform ok nor error spec\."
+             #"Invalid value for spec"
              (convert/map->response {:status :ok :result "test" :trace-id 123})))
 
         (is (thrown-with-msg?
              clojure.lang.ExceptionInfo
-             #"Response does not conform ok nor error spec\."
+             #"Invalid value for spec"
              (convert/map->response {:status :not-found :title "Error" :timestamp "invalid"})))))))
 
 (deftest response->ex-info-test

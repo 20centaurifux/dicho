@@ -9,12 +9,12 @@
   "Helper to test that a function throws ex-info with correct message and ex-data."
   [f invalid-response]
   (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                        #"Response does not conform ok nor error spec"
+                        #"Invalid value for spec"
                         (f)))
   (try
     (f)
     (catch clojure.lang.ExceptionInfo e
-      (is (= invalid-response (:response (ex-data e)))))))
+      (is (= invalid-response (:arg (ex-data e)))))))
 
 ;;; Tests
 

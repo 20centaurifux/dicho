@@ -2,7 +2,8 @@
   "Core functions for creating standardized success and error responses."
   (:require [clojure.spec.alpha :as s]
             [dicho.types :refer [->OkResponse ->ErrorResponse]]
-            [dicho.specs :as specs])
+            [dicho.specs :as specs]
+            [dicho.utils :refer [validate!]])
   (:import [dicho.types OkResponse ErrorResponse]))
 
 (defn ok?
@@ -49,25 +50,17 @@
     ;; => #dicho.types.OkResponse{:status :ok, :result \"data\", :trace-id \"abc123\"}
    ```
   
-  Throws ExceptionInfo if extra is not a map or result doesn't conform to `:dicho.specs/ok`."
+  Throws ExceptionInfo if extra is not a map or result does not conform to `:dicho.specs/ok`."
   ([v]
-   (let [result (->OkResponse :ok v)]
-     (when-not (s/valid? ::specs/ok result)
-       (throw (ex-info "Result does not conform to ::specs/ok"
-                       {:result result
-                        :explain (s/explain-data ::specs/ok result)})))
-     result))
+   (-> (->OkResponse :ok v)
+       (validate! ::specs/ok)))
   ([v extra]
    (when-not (map? extra)
      (throw (ex-info "Extra must be a map"
                      {:extra extra
                       :type (type extra)})))
-   (let [result (merge (->OkResponse :ok v) extra)]
-     (when-not (s/valid? ::specs/ok result)
-       (throw (ex-info "Result does not conform to ::specs/ok"
-                       {:result result
-                        :explain (s/explain-data ::specs/ok result)})))
-     result)))
+   (-> (merge (->OkResponse :ok v) extra)
+       (validate! ::specs/ok))))
 
 (defn err
   "Creates an `ErrorResponse` record.
@@ -81,25 +74,17 @@
     ;; => #dicho.types.ErrorResponse{:status :rate-limited, :title \"Too many requests\", :retry? true, :cause \"Quota exceeded\"}
    ```
    
-  Throws ExceptionInfo if inputs are invalid or result doesn't conform to `:dicho.specs/error`."
+  Throws ExceptionInfo if inputs are invalid or result does not conform to `:dicho.specs/error`."
   ([status msg]
-   (let [result (->ErrorResponse status msg)]
-     (when-not (s/valid? ::specs/error result)
-       (throw (ex-info "Result does not conform to ::specs/error"
-                       {:result result
-                        :explain (s/explain-data ::specs/error result)})))
-     result))
+   (-> (->ErrorResponse status msg)
+       (validate! ::specs/error)))
   ([status msg extra]
    (when-not (map? extra)
      (throw (ex-info "Extra must be a map"
                      {:extra extra
                       :type (type extra)})))
-   (let [result (merge (err status msg) extra)]
-     (when-not (s/valid? ::specs/error result)
-       (throw (ex-info "Result does not conform to ::specs/error"
-                       {:result result
-                        :explain (s/explain-data ::specs/error result)})))
-     result)))
+   (-> (merge (err status msg) extra)
+       (validate! ::specs/error))))
 
 ;; Protocol for unwrapping response values
 
@@ -134,9 +119,7 @@
    ```"
   [[binding response] & body]
   `(let [response# ~response]
-     (when-not (s/valid? ::specs/response response#)
-       (throw (ex-info "Response does not conform ok nor error spec."
-                       {:response response#})))
+     (validate! response# ::specs/response)
      (when (= :ok (:status response#))
        (let [~binding (:result response#)]
          ~@body))))
@@ -152,9 +135,7 @@
    ```"
   [[binding response] & body]
   `(let [response# ~response]
-     (when-not (s/valid? ::specs/response response#)
-       (throw (ex-info "Response does not conform ok nor error spec."
-                       {:response response#})))
+     (validate! response# ::specs/response)
      (when (not= :ok (:status response#))
        (let [~binding response#]
          ~@body))))
@@ -171,9 +152,7 @@
   [response ok-binding ok-body error-binding error-body]
   (let [response-sym (gensym "response")]
     `(let [~response-sym ~response]
-       (when-not (s/valid? ::specs/response ~response-sym)
-         (throw (ex-info "Response does not conform ok nor error spec."
-                         {:response ~response-sym})))
+       (validate! ~response-sym ::specs/response)
        (if (= :ok (:status ~response-sym))
          (let [~@ok-binding (:result ~response-sym)]
            ~ok-body)
@@ -194,8 +173,6 @@
   [response & cases]
   (let [response-sym (gensym "response")]
     `(let [~response-sym ~response]
-       (when-not (s/valid? ::specs/response ~response-sym)
-         (throw (ex-info "Response does not conform ok nor error spec."
-                         {:response ~response-sym})))
+       (validate! ~response-sym ::specs/response)
        (case (:status ~response-sym)
          ~@cases))))
