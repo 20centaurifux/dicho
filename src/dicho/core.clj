@@ -118,8 +118,7 @@
      (* result 2))
    ```"
   [[binding response] & body]
-  `(let [response# ~response]
-     (validate! response# ::specs/response)
+  `(let [response# (validate! ~response ::specs/response)]
      (when (= :ok (:status response#))
        (let [~binding (:result response#)]
          ~@body))))
@@ -134,8 +133,7 @@
      (str \"Failed: \" (:title error)))
    ```"
   [[binding response] & body]
-  `(let [response# ~response]
-     (validate! response# ::specs/response)
+  `(let [response# (validate! ~response ::specs/response)]
      (when (not= :ok (:status response#))
        (let [~binding response#]
          ~@body))))
@@ -151,8 +149,7 @@
    ```"
   [response ok-binding ok-body error-binding error-body]
   (let [response-sym (gensym "response")]
-    `(let [~response-sym ~response]
-       (validate! ~response-sym ::specs/response)
+    `(let [~response-sym (validate! ~response ::specs/response)]
        (if (= :ok (:status ~response-sym))
          (let [~@ok-binding (:result ~response-sym)]
            ~ok-body)
@@ -172,7 +169,6 @@
    ```"
   [response & cases]
   (let [response-sym (gensym "response")]
-    `(let [~response-sym ~response]
-       (validate! ~response-sym ::specs/response)
+    `(let [~response-sym (validate! ~response ::specs/response)]
        (case (:status ~response-sym)
          ~@cases))))
